@@ -10,7 +10,10 @@ val GradientTop = Color(0xFF0F0B2E)
 val GradientMid = Color(0xFF241352)
 val GradientBottom = Color(0xFF14123D)
 
-val DisplayExpression = Color(0xFFF2EEFF)
+val GlowViolet = Color(0x557C4DFF)
+val GlowBlue = Color(0x442D5BFF)
+
+val DisplayExpression =Color(0xFFF2EEFF)
 val DisplayPreview = Color(0xFF9C96C4)
 val DisplayError = Color(0xFFFF8A80)
 

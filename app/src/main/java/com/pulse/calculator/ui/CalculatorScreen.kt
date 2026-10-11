@@ -1,6 +1,5 @@
 package com.pulse.calculator.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,7 +21,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -37,11 +35,9 @@ import com.pulse.calculator.state.CalculatorState
 import com.pulse.calculator.ui.display.ExpressionDisplay
 import com.pulse.calculator.ui.display.ExpressionFormat
 import com.pulse.calculator.ui.display.PreviewDisplay
+import com.pulse.calculator.ui.effects.AnimatedBackground
 import com.pulse.calculator.ui.keypad.Keypad
 import com.pulse.calculator.ui.theme.DisplayExpression
-import com.pulse.calculator.ui.theme.GradientBottom
-import com.pulse.calculator.ui.theme.GradientMid
-import com.pulse.calculator.ui.theme.GradientTop
 import com.pulse.calculator.ui.theme.PulseTheme
 import com.pulse.calculator.ui.theme.TopBarTitleStyle
 
@@ -51,10 +47,6 @@ private const val KeypadWeight = 0.6f
 
 private val ScreenPadding = 16.dp
 private val IconTouchTarget = 48.dp
-
-private val backgroundBrush = Brush.linearGradient(
-    colors = listOf(GradientTop, GradientMid, GradientBottom),
-)
 
 @Composable
 fun CalculatorScreen(
@@ -67,11 +59,8 @@ fun CalculatorScreen(
     val cappedDensity = Density(density.density, fontScale = density.fontScale.coerceAtMost(MaxFontScale))
 
     CompositionLocalProvider(LocalDensity provides cappedDensity) {
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .background(backgroundBrush),
-        ) {
+        Box(modifier = modifier.fillMaxSize()) {
+            AnimatedBackground(Modifier.matchParentSize())
             Column(
                 modifier = Modifier
                     .fillMaxSize()

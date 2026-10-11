@@ -8,8 +8,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import com.pulse.calculator.ui.TestTags
 import com.pulse.calculator.ui.theme.DisplayExpression
 import com.pulse.calculator.ui.theme.ExpressionStyle
 import com.pulse.calculator.ui.theme.PulseTheme
@@ -28,6 +30,7 @@ fun ExpressionDisplay(
             maxLines = 1,
             softWrap = false,
             modifier = Modifier
+                .testTag(TestTags.Expression)
                 .horizontalScroll(rememberScrollState(), reverseScrolling = true)
                 .widthIn(min = maxWidth),
         )
