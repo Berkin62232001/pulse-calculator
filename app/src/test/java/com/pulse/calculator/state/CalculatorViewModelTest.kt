@@ -254,10 +254,151 @@ class CalculatorViewModelTest {
         assertEquals("1234567890".repeat(3), viewModel.state.value.expression)
     }
 
+    // TEST_PLAN section 4: live preview.
+
+    private fun previewAfter(keys: String): String? {
+        val viewModel = CalculatorViewModel()
+        viewModel.press(keys)
+        return viewModel.state.value.preview
+    }
+
     @Test
-    fun previewStaysHiddenUntilM5() = runTest {
+    fun previewShowsTheResultOfACompleteExpression() {
+        assertEquals("17", previewAfter("12+5"))
+        assertEquals("14", previewAfter("2+3*4"))
+        assertEquals("20", previewAfter("(2+3)*4"))
+        assertEquals("0.05", previewAfter("5%"))
+        assertEquals("3", previewAfter("-5+8"))
+    }
+
+    @Test
+    fun previewIsGroupedLikeTheDisplay() {
+        assertEquals("1,000,000", previewAfter("1000*1000"))
+    }
+
+    @Test
+    fun incompleteExpressionsHaveNoPreview() {
+        assertNull(previewAfter("12+"))
+        assertNull(previewAfter("3*"))
+        assertNull(previewAfter("(12+5"))
+        assertNull(previewAfter("("))
+        assertNull(previewAfter("5*-"))
+    }
+
+    @Test
+    fun aSingleNumberHasNoPreview() {
+        assertNull(previewAfter(""))
+        assertNull(previewAfter("42"))
+        assertNull(previewAfter("-42"))
+        assertNull(previewAfter("4.5"))
+        assertNull(previewAfter("(42)"))
+    }
+
+    @Test
+    fun mathErrorsHideThePreviewSilently() {
+        val viewModel = CalculatorViewModel()
+        viewModel.press("8/0")
+        assertNull(viewModel.state.value.preview)
+        assertNull(viewModel.state.value.error)
+    }
+
+    @Test
+    fun unclosedParenthesesAreNotAutoClosedForThePreview() {
+        val viewModel = CalculatorViewModel()
+        viewModel.press("12+5*(3+2")
+        assertNull(viewModel.state.value.preview)
+
+        viewModel.press(")")
+        assertEquals("37", viewModel.state.value.preview)
+    }
+
+    @Test
+    fun backspaceUpdatesThePreview() {
+        val viewModel = CalculatorViewModel()
+        viewModel.press("12+55")
+        assertEquals("67", viewModel.state.value.preview)
+
+        viewModel.press("<")
+        assertEquals("17", viewModel.state.value.preview)
+
+        viewModel.press("<")
+        assertNull(viewModel.state.value.preview)
+
+        viewModel.press("<<")
+        assertNull(viewModel.state.value.preview)
+    }
+
+    @Test
+    fun previewTracksEveryEdit() {
+        val viewModel = CalculatorViewModel()
+        val seen = "12+5*2".map { key ->
+            viewModel.press(key.toString())
+            viewModel.state.value.preview
+        }
+        assertEquals(listOf(null, null, null, "17", null, "22"), seen)
+    }
+
+    @Test
+    fun previewDisappearsOnceTheResultIsConfirmed() {
         val viewModel = CalculatorViewModel()
         viewModel.press("12+5")
+        assertEquals("17", viewModel.state.value.preview)
+
+        viewModel.press("=")
+
         assertNull(viewModel.state.value.preview)
+        assertEquals("17", viewModel.state.value.expression)
+    }
+
+    @Test
+    fun errorOnEqualsLeavesNoPreview() {
+        val viewModel = CalculatorViewModel()
+        viewModel.press("8/0=")
+        assertNull(viewModel.state.value.preview)
+        assertEquals(ErrorReason.DivideByZero, viewModel.state.value.error)
+    }
+
+    @Test
+    fun clearHidesThePreview() {
+        val viewModel = CalculatorViewModel()
+        viewModel.press("12+5C")
+        assertNull(viewModel.state.value.preview)
+    }
+
+    @Test
+    fun continuingFromAResultStartsPreviewingAgain() {
+        val viewModel = CalculatorViewModel()
+        viewModel.press("8+9=*2")
+        assertEquals("34", viewModel.state.value.preview)
+    }
+
+    @Test
+    fun loadingFromHistoryShowsItsPreview() {
+        val viewModel = CalculatorViewModel()
+        viewModel.onAction(CalculatorAction.LoadHistory("12+5"))
+        assertEquals("17", viewModel.state.value.preview)
+    }
+
+    @Test
+    fun overflowAndOtherFailuresHideThePreview() {
+        val viewModel = CalculatorViewModel()
+        viewModel.onAction(CalculatorAction.LoadHistory("9".repeat(60) + "*" + "9".repeat(60)))
+        assertNull(viewModel.state.value.preview)
+    }
+
+    @Test
+    fun signsAloneAreNotAnOperation() {
+        val viewModel = CalculatorViewModel()
+        viewModel.onAction(CalculatorAction.LoadHistory("--5"))
+        assertNull(viewModel.state.value.preview)
+
+        viewModel.onAction(CalculatorAction.LoadHistory("-(5)"))
+        assertNull(viewModel.state.value.preview)
+
+        viewModel.onAction(CalculatorAction.LoadHistory("5-3"))
+        assertEquals("2", viewModel.state.value.preview)
+
+        viewModel.onAction(CalculatorAction.LoadHistory("(2)-3"))
+        assertEquals("-1", viewModel.state.value.preview)
     }
 }

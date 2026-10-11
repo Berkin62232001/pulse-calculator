@@ -87,7 +87,7 @@ fun CalculatorScreen(
                 ) {
                     ExpressionDisplay(text = expressionText(state.expression))
                     PreviewDisplay(
-                        text = state.error?.let { stringResource(it.messageRes()) } ?: "",
+                        text = state.error?.let { stringResource(it.messageRes()) } ?: state.preview.orEmpty(),
                         isError = state.error != null,
                     )
                     BackspaceRow(
@@ -175,7 +175,7 @@ private fun IconTouchTarget(
     }
 }
 
-private val SampleState = CalculatorState(expression = "12+5*(3+2)")
+private val SampleState = CalculatorState(expression = "12+5*(3+2)", preview = "37")
 private val ErrorState = CalculatorState(expression = "8/0", error = ErrorReason.DivideByZero)
 
 @Preview(name = "Small phone", widthDp = 360, heightDp = 640)

@@ -38,8 +38,24 @@ class CalculatorViewModel : ViewModel() {
         val current = _state.value
         val edit = InputEditor.apply(current, action)
         // Any input dismisses a shown error and then applies to the expression as usual.
-        _state.value = current.copy(expression = edit.expression, isResult = edit.isResult, error = null)
+        _state.value = current.copy(
+            expression = edit.expression,
+            isResult = edit.isResult,
+            error = null,
+            preview = previewFor(edit.expression, edit.isResult),
+        )
         if (edit.hitLimit) _events.tryEmit(UiEvent.Shake)
+    }
+
+    /**
+     * Live preview (PRODUCT_SPEC section 4): only a successful evaluation of an expression that
+     * contains an operation. Incomplete input, math errors and plain numbers show nothing; errors
+     * only surface on `=`.
+     */
+    private fun previewFor(expression: String, isResult: Boolean): String? {
+        if (isResult || !hasOperation(expression)) return null
+        return (CalculatorEngine.evaluate(expression) as? EvalResult.Success)
+            ?.let { NumberFormatter.format(it.value) }
     }
 
     private fun evaluate() {
@@ -57,13 +73,14 @@ class CalculatorViewModel : ViewModel() {
                     expression = NumberFormatter.toInternal(result.value),
                     isResult = true,
                     error = null,
+                    preview = null,
                     history = (listOf(entry) + current.history).take(MaxHistory),
                 )
                 _events.tryEmit(UiEvent.ResultConfirmed)
             }
             EvalResult.Incomplete -> _events.tryEmit(UiEvent.Shake)
             is EvalResult.Error -> {
-                _state.value = current.copy(error = result.reason)
+                _state.value = current.copy(error = result.reason, preview = null)
                 _events.tryEmit(UiEvent.ErrorShown)
             }
         }
@@ -73,5 +90,14 @@ class CalculatorViewModel : ViewModel() {
         const val MaxHistory = 50
         const val EventBuffer = 16
         val SingleNumber = Regex("-?(\\d+\\.?\\d*|\\.\\d+)")
+
+        /** `+ * / %` always count; `-` counts only between two terms, not as a sign. */
+        fun hasOperation(expression: String): Boolean = expression.indices.any { i ->
+            when (expression[i]) {
+                '+', '*', '/', '%' -> true
+                '-' -> i > 0 && expression[i - 1].let { it.isDigit() || it == '.' || it == ')' || it == '%' }
+                else -> false
+            }
+        }
     }
 }
