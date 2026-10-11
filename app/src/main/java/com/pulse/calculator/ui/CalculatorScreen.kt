@@ -18,6 +18,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,16 +30,24 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.launch
 import com.pulse.calculator.R
 import com.pulse.calculator.engine.ErrorReason
 import com.pulse.calculator.state.CalculatorAction
 import com.pulse.calculator.state.CalculatorState
+import com.pulse.calculator.state.UiEvent
 import com.pulse.calculator.ui.display.ExpressionDisplay
 import com.pulse.calculator.ui.display.ExpressionFormat
 import com.pulse.calculator.ui.display.PreviewDisplay
 import com.pulse.calculator.ui.effects.AnimatedBackground
+import com.pulse.calculator.ui.effects.DisplayEffects
+import com.pulse.calculator.ui.effects.ParticleBurst
+import com.pulse.calculator.ui.effects.displayEffects
 import com.pulse.calculator.ui.keypad.Keypad
 import com.pulse.calculator.ui.theme.DisplayExpression
+import com.pulse.calculator.ui.theme.LocalReducedMotion
 import com.pulse.calculator.ui.theme.PulseTheme
 import com.pulse.calculator.ui.theme.TopBarTitleStyle
 
@@ -51,12 +61,33 @@ private val IconTouchTarget = 48.dp
 @Composable
 fun CalculatorScreen(
     state: CalculatorState,
+    events: Flow<UiEvent>,
     onAction: (CalculatorAction) -> Unit,
     onHistoryClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
     val cappedDensity = Density(density.density, fontScale = density.fontScale.coerceAtMost(MaxFontScale))
+    val effects = remember { DisplayEffects() }
+    val reducedMotion = LocalReducedMotion.current
+
+    // Events only start animations; nothing here can change the calculator state or block input.
+    LaunchedEffect(events, reducedMotion) {
+        if (reducedMotion) return@LaunchedEffect
+        events.collect { event ->
+            when (event) {
+                UiEvent.Shake -> launch { effects.shake(strong = false) }
+                UiEvent.ErrorShown -> {
+                    launch { effects.shake(strong = true) }
+                    launch { effects.pulseError() }
+                }
+                UiEvent.ResultConfirmed -> {
+                    launch { effects.rollResult() }
+                    launch { effects.burst() }
+                }
+            }
+        }
+    }
 
     CompositionLocalProvider(LocalDensity provides cappedDensity) {
         Box(modifier = modifier.fillMaxSize()) {
@@ -74,7 +105,11 @@ fun CalculatorScreen(
                         .weight(DisplayWeight),
                     verticalArrangement = Arrangement.Bottom,
                 ) {
-                    ExpressionDisplay(text = expressionText(state.expression))
+                    ExpressionDisplay(
+                        text = ExpressionFormat.toDisplay(state.expression),
+                        isResult = state.isResult,
+                        modifier = Modifier.displayEffects(effects),
+                    )
                     PreviewDisplay(
                         text = state.error?.let { stringResource(it.messageRes()) } ?: state.preview.orEmpty(),
                         isError = state.error != null,
@@ -86,10 +121,14 @@ fun CalculatorScreen(
                 }
                 Keypad(
                     onAction = onAction,
+                    onEqualsPositioned = { effects.equalsCenter = it },
                     modifier = Modifier
                         .weight(KeypadWeight)
                         .padding(bottom = ScreenPadding),
                 )
+            }
+            if (effects.burstActive) {
+                ParticleBurst(burstId = effects.burstId, origin = effects.equalsCenter)
             }
         }
     }
@@ -114,10 +153,6 @@ private fun TopBar(onHistoryClick: () -> Unit) {
         )
     }
 }
-
-/** An empty expression reads as 0; the state itself stays empty. */
-private fun expressionText(expression: String): String =
-    if (expression.isEmpty()) "0" else ExpressionFormat.toDisplay(expression)
 
 private fun ErrorReason.messageRes(): Int = when (this) {
     ErrorReason.DivideByZero -> R.string.error_divide_by_zero
@@ -171,7 +206,7 @@ private val ErrorState = CalculatorState(expression = "8/0", error = ErrorReason
 @Composable
 private fun CalculatorScreenSmallPreview() {
     PulseTheme {
-        CalculatorScreen(state = SampleState, onAction = {}, onHistoryClick = {})
+        CalculatorScreen(state = SampleState, events = emptyFlow(), onAction = {}, onHistoryClick = {})
     }
 }
 
@@ -179,7 +214,7 @@ private fun CalculatorScreenSmallPreview() {
 @Composable
 private fun CalculatorScreenLargePreview() {
     PulseTheme {
-        CalculatorScreen(state = SampleState, onAction = {}, onHistoryClick = {})
+        CalculatorScreen(state = SampleState, events = emptyFlow(), onAction = {}, onHistoryClick = {})
     }
 }
 
@@ -187,7 +222,7 @@ private fun CalculatorScreenLargePreview() {
 @Composable
 private fun CalculatorScreenLargeFontPreview() {
     PulseTheme {
-        CalculatorScreen(state = SampleState, onAction = {}, onHistoryClick = {})
+        CalculatorScreen(state = SampleState, events = emptyFlow(), onAction = {}, onHistoryClick = {})
     }
 }
 
@@ -195,6 +230,6 @@ private fun CalculatorScreenLargeFontPreview() {
 @Composable
 private fun CalculatorScreenErrorPreview() {
     PulseTheme {
-        CalculatorScreen(state = ErrorState, onAction = {}, onHistoryClick = {})
+        CalculatorScreen(state = ErrorState, events = emptyFlow(), onAction = {}, onHistoryClick = {})
     }
 }

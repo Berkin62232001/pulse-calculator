@@ -10,6 +10,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -67,6 +70,7 @@ private val MinTouchTarget = 48.dp
 fun Keypad(
     onAction: (CalculatorAction) -> Unit,
     modifier: Modifier = Modifier,
+    onEqualsPositioned: (Offset) -> Unit = {},
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -89,6 +93,14 @@ fun Keypad(
                             .weight(1f)
                             .fillMaxSize()
                             .testTag(TestTags.key(key.label))
+                            .then(
+                                if (key.action == CalculatorAction.Equals) {
+                                    // Where the result particles start.
+                                    Modifier.onGloballyPositioned { onEqualsPositioned(it.boundsInRoot().center) }
+                                } else {
+                                    Modifier
+                                },
+                            )
                             .widthIn(min = MinTouchTarget)
                             .heightIn(min = MinTouchTarget),
                     )

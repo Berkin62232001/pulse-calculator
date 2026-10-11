@@ -29,6 +29,7 @@ class MainActivity : ComponentActivity() {
                 val state by viewModel.state.collectAsStateWithLifecycle()
                 CalculatorScreen(
                     state = state,
+                    events = viewModel.events,
                     onAction = viewModel::onAction,
                     onHistoryClick = { Log.d(LogTag, "history") },
                 )
