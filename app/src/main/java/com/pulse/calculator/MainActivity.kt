@@ -7,12 +7,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.pulse.calculator.state.CalculatorViewModel
 import com.pulse.calculator.ui.CalculatorScreen
 import com.pulse.calculator.ui.theme.PulseTheme
 
 private const val LogTag = "Pulse"
-private const val SampleExpression = "12 + 5 × (3 + 2)"
-private const val SamplePreview = "37"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,10 +25,12 @@ class MainActivity : ComponentActivity() {
         )
         setContent {
             PulseTheme {
+                val viewModel: CalculatorViewModel = viewModel()
+                val state by viewModel.state.collectAsStateWithLifecycle()
                 CalculatorScreen(
-                    expression = SampleExpression,
-                    preview = SamplePreview,
-                    onKey = { label -> Log.d(LogTag, "key: $label") },
+                    state = state,
+                    onAction = viewModel::onAction,
+                    onHistoryClick = { Log.d(LogTag, "history") },
                 )
             }
         }

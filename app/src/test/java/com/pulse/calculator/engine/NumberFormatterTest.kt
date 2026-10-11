@@ -60,6 +60,36 @@ class NumberFormatterTest(private val value: String, private val expected: Strin
     }
 }
 
+/** The plain, ungrouped decimal a result turns into when it is continued in the editor. */
+@RunWith(Parameterized::class)
+class NumberFormatterInternalTest(private val value: String, private val expected: String) {
+
+    @Test
+    fun convertsToPlainRoundedDecimal() {
+        assertEquals("value $value", expected, NumberFormatter.toInternal(BigDecimal(value)))
+    }
+
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "{0} -> {1}")
+        fun cases(): List<Array<String>> = listOf(
+            arrayOf("17", "17"),
+            arrayOf("2.50", "2.5"),
+            arrayOf("100", "100"),
+            arrayOf("1E+2", "100"),
+            arrayOf("-0.050", "-0.05"),
+            arrayOf("0", "0"),
+            arrayOf("-0.0", "0"),
+            arrayOf("0.333333333333333333", "0.333333333333"),
+            arrayOf("0.666666666666666666", "0.666666666667"),
+            arrayOf("9.99999999999E12", "9999999999990"),
+            arrayOf("1.2345E15", "1234500000000000"),
+            arrayOf("1E-10", "0.0000000001"),
+            arrayOf("1234567.891", "1234567.891"),
+        )
+    }
+}
+
 class NumberFormatterGroupingOffTest {
 
     @Test

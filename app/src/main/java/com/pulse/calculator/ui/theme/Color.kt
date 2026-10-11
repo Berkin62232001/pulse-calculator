@@ -12,6 +12,7 @@ val GradientBottom = Color(0xFF14123D)
 
 val DisplayExpression = Color(0xFFF2EEFF)
 val DisplayPreview = Color(0xFF9C96C4)
+val DisplayError = Color(0xFFFF8A80)
 
 val DigitContainer = Color(0xFF231C55)
 val DigitContent = Color(0xFFF2EEFF)

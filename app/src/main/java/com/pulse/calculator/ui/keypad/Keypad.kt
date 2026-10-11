@@ -14,44 +14,47 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.pulse.calculator.R
+import com.pulse.calculator.engine.Op
+import com.pulse.calculator.state.CalculatorAction
 import com.pulse.calculator.ui.theme.PulseTheme
 
 private data class KeySpec(
     val label: String,
     val role: CalcButtonRole,
     @StringRes val descriptionRes: Int,
+    val action: CalculatorAction,
 )
 
 private val keyRows: List<List<KeySpec>> = listOf(
     listOf(
-        KeySpec("AC", CalcButtonRole.Clear, R.string.key_clear),
-        KeySpec("(", CalcButtonRole.Function, R.string.key_open_paren),
-        KeySpec(")", CalcButtonRole.Function, R.string.key_close_paren),
-        KeySpec("÷", CalcButtonRole.Operator, R.string.key_divide),
+        KeySpec("AC", CalcButtonRole.Clear, R.string.key_clear, CalculatorAction.Clear),
+        KeySpec("(", CalcButtonRole.Function, R.string.key_open_paren, CalculatorAction.LParen),
+        KeySpec(")", CalcButtonRole.Function, R.string.key_close_paren, CalculatorAction.RParen),
+        KeySpec("÷", CalcButtonRole.Operator, R.string.key_divide, CalculatorAction.Op(Op.Divide)),
     ),
     listOf(
-        KeySpec("7", CalcButtonRole.Digit, R.string.key_7),
-        KeySpec("8", CalcButtonRole.Digit, R.string.key_8),
-        KeySpec("9", CalcButtonRole.Digit, R.string.key_9),
-        KeySpec("×", CalcButtonRole.Operator, R.string.key_multiply),
+        KeySpec("7", CalcButtonRole.Digit, R.string.key_7, CalculatorAction.Digit(7)),
+        KeySpec("8", CalcButtonRole.Digit, R.string.key_8, CalculatorAction.Digit(8)),
+        KeySpec("9", CalcButtonRole.Digit, R.string.key_9, CalculatorAction.Digit(9)),
+        KeySpec("×", CalcButtonRole.Operator, R.string.key_multiply, CalculatorAction.Op(Op.Multiply)),
     ),
     listOf(
-        KeySpec("4", CalcButtonRole.Digit, R.string.key_4),
-        KeySpec("5", CalcButtonRole.Digit, R.string.key_5),
-        KeySpec("6", CalcButtonRole.Digit, R.string.key_6),
-        KeySpec("−", CalcButtonRole.Operator, R.string.key_minus),
+        KeySpec("4", CalcButtonRole.Digit, R.string.key_4, CalculatorAction.Digit(4)),
+        KeySpec("5", CalcButtonRole.Digit, R.string.key_5, CalculatorAction.Digit(5)),
+        KeySpec("6", CalcButtonRole.Digit, R.string.key_6, CalculatorAction.Digit(6)),
+        KeySpec("−", CalcButtonRole.Operator, R.string.key_minus, CalculatorAction.Op(Op.Subtract)),
     ),
     listOf(
-        KeySpec("1", CalcButtonRole.Digit, R.string.key_1),
-        KeySpec("2", CalcButtonRole.Digit, R.string.key_2),
-        KeySpec("3", CalcButtonRole.Digit, R.string.key_3),
-        KeySpec("+", CalcButtonRole.Operator, R.string.key_plus),
+        KeySpec("1", CalcButtonRole.Digit, R.string.key_1, CalculatorAction.Digit(1)),
+        KeySpec("2", CalcButtonRole.Digit, R.string.key_2, CalculatorAction.Digit(2)),
+        KeySpec("3", CalcButtonRole.Digit, R.string.key_3, CalculatorAction.Digit(3)),
+        KeySpec("+", CalcButtonRole.Operator, R.string.key_plus, CalculatorAction.Op(Op.Add)),
     ),
     listOf(
-        KeySpec("%", CalcButtonRole.Function, R.string.key_percent),
-        KeySpec("0", CalcButtonRole.Digit, R.string.key_0),
-        KeySpec(".", CalcButtonRole.Digit, R.string.key_dot),
-        KeySpec("=", CalcButtonRole.Equals, R.string.key_equals),
+        KeySpec("%", CalcButtonRole.Function, R.string.key_percent, CalculatorAction.Percent),
+        KeySpec("0", CalcButtonRole.Digit, R.string.key_0, CalculatorAction.Digit(0)),
+        KeySpec(".", CalcButtonRole.Digit, R.string.key_dot, CalculatorAction.Dot),
+        KeySpec("=", CalcButtonRole.Equals, R.string.key_equals, CalculatorAction.Equals),
     ),
 )
 
@@ -60,7 +63,7 @@ private val MinTouchTarget = 48.dp
 
 @Composable
 fun Keypad(
-    onKey: (String) -> Unit,
+    onAction: (CalculatorAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -79,7 +82,7 @@ fun Keypad(
                         label = key.label,
                         role = key.role,
                         contentDescription = stringResource(key.descriptionRes),
-                        onClick = { onKey(key.label) },
+                        onClick = { onAction(key.action) },
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxSize()
@@ -95,5 +98,5 @@ fun Keypad(
 @Preview(widthDp = 360, heightDp = 400)
 @Composable
 private fun KeypadPreview() {
-    PulseTheme { Keypad(onKey = {}) }
+    PulseTheme { Keypad(onAction = {}) }
 }

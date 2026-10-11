@@ -4,6 +4,10 @@
     <string name="top_bar_title">PULSE</string>
     <string name="history_button">History</string>
 
+    <string name="error_divide_by_zero">Can\'t divide by zero</string>
+    <string name="error_overflow">Number too large</string>
+    <string name="error_malformed">Invalid expression</string>
+
     <string name="key_0">zero</string>
     <string name="key_1">one</string>
     <string name="key_2">two</string>

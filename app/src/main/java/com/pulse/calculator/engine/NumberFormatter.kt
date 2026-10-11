@@ -15,7 +15,7 @@ object NumberFormatter {
     fun format(value: BigDecimal, grouping: Boolean = true): String {
         if (value.signum() == 0) return "0"
         // Rounding comes first so the notation is chosen from the value that will actually be shown.
-        val rounded = value.round(SignificantDigits).stripTrailingZeros()
+        val rounded = roundForDisplay(value)
         val magnitude = rounded.abs()
         return if (magnitude >= ScientificUpper || magnitude < ScientificLower) {
             scientific(rounded)
@@ -23,6 +23,18 @@ object NumberFormatter {
             plain(rounded, grouping)
         }
     }
+
+    /**
+     * The shown value as an ungrouped plain decimal (never scientific), for putting a result back
+     * into the editor. Rounded like [format], so editing a result edits exactly what was displayed.
+     */
+    fun toInternal(value: BigDecimal): String {
+        if (value.signum() == 0) return "0"
+        return roundForDisplay(value).toPlainString()
+    }
+
+    private fun roundForDisplay(value: BigDecimal): BigDecimal =
+        value.round(SignificantDigits).stripTrailingZeros()
 
     private fun scientific(value: BigDecimal): String {
         val digits = value.unscaledValue().abs().toString()

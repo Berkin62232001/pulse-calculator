@@ -1,7 +1,8 @@
 package com.pulse.calculator.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,7 +31,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.pulse.calculator.R
+import com.pulse.calculator.engine.ErrorReason
+import com.pulse.calculator.state.CalculatorAction
+import com.pulse.calculator.state.CalculatorState
 import com.pulse.calculator.ui.display.ExpressionDisplay
+import com.pulse.calculator.ui.display.ExpressionFormat
 import com.pulse.calculator.ui.display.PreviewDisplay
 import com.pulse.calculator.ui.keypad.Keypad
 import com.pulse.calculator.ui.theme.DisplayExpression
@@ -53,9 +58,9 @@ private val backgroundBrush = Brush.linearGradient(
 
 @Composable
 fun CalculatorScreen(
-    expression: String,
-    preview: String,
-    onKey: (String) -> Unit,
+    state: CalculatorState,
+    onAction: (CalculatorAction) -> Unit,
+    onHistoryClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
@@ -73,19 +78,25 @@ fun CalculatorScreen(
                     .windowInsetsPadding(WindowInsets.safeDrawing)
                     .padding(horizontal = ScreenPadding),
             ) {
-                TopBar(onHistoryClick = { onKey("history") })
+                TopBar(onHistoryClick = onHistoryClick)
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(DisplayWeight),
                     verticalArrangement = Arrangement.Bottom,
                 ) {
-                    ExpressionDisplay(text = expression)
-                    PreviewDisplay(text = preview)
-                    BackspaceRow(onClick = { onKey("backspace") })
+                    ExpressionDisplay(text = expressionText(state.expression))
+                    PreviewDisplay(
+                        text = state.error?.let { stringResource(it.messageRes()) } ?: "",
+                        isError = state.error != null,
+                    )
+                    BackspaceRow(
+                        onClick = { onAction(CalculatorAction.Backspace) },
+                        onLongClick = { onAction(CalculatorAction.Clear) },
+                    )
                 }
                 Keypad(
-                    onKey = onKey,
+                    onAction = onAction,
                     modifier = Modifier
                         .weight(KeypadWeight)
                         .padding(bottom = ScreenPadding),
@@ -115,8 +126,18 @@ private fun TopBar(onHistoryClick: () -> Unit) {
     }
 }
 
+/** An empty expression reads as 0; the state itself stays empty. */
+private fun expressionText(expression: String): String =
+    if (expression.isEmpty()) "0" else ExpressionFormat.toDisplay(expression)
+
+private fun ErrorReason.messageRes(): Int = when (this) {
+    ErrorReason.DivideByZero -> R.string.error_divide_by_zero
+    ErrorReason.Overflow -> R.string.error_overflow
+    ErrorReason.Malformed -> R.string.error_malformed
+}
+
 @Composable
-private fun BackspaceRow(onClick: () -> Unit) {
+private fun BackspaceRow(onClick: () -> Unit, onLongClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.End,
@@ -125,21 +146,24 @@ private fun BackspaceRow(onClick: () -> Unit) {
             iconRes = R.drawable.ic_backspace,
             contentDescription = stringResource(R.string.key_backspace),
             onClick = onClick,
+            onLongClick = onLongClick,
         )
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun IconTouchTarget(
     iconRes: Int,
     contentDescription: String,
     onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
 ) {
     Box(
         modifier = Modifier
             .size(IconTouchTarget)
             .clip(CircleShape)
-            .clickable(role = Role.Button, onClick = onClick),
+            .combinedClickable(role = Role.Button, onClick = onClick, onLongClick = onLongClick),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -151,11 +175,14 @@ private fun IconTouchTarget(
     }
 }
 
+private val SampleState = CalculatorState(expression = "12+5*(3+2)")
+private val ErrorState = CalculatorState(expression = "8/0", error = ErrorReason.DivideByZero)
+
 @Preview(name = "Small phone", widthDp = 360, heightDp = 640)
 @Composable
 private fun CalculatorScreenSmallPreview() {
     PulseTheme {
-        CalculatorScreen(expression = "12 + 5 × (3 + 2)", preview = "37", onKey = {})
+        CalculatorScreen(state = SampleState, onAction = {}, onHistoryClick = {})
     }
 }
 
@@ -163,7 +190,7 @@ private fun CalculatorScreenSmallPreview() {
 @Composable
 private fun CalculatorScreenLargePreview() {
     PulseTheme {
-        CalculatorScreen(expression = "12 + 5 × (3 + 2)", preview = "37", onKey = {})
+        CalculatorScreen(state = SampleState, onAction = {}, onHistoryClick = {})
     }
 }
 
@@ -171,6 +198,14 @@ private fun CalculatorScreenLargePreview() {
 @Composable
 private fun CalculatorScreenLargeFontPreview() {
     PulseTheme {
-        CalculatorScreen(expression = "12 + 5 × (3 + 2)", preview = "37", onKey = {})
+        CalculatorScreen(state = SampleState, onAction = {}, onHistoryClick = {})
+    }
+}
+
+@Preview(name = "Error", widthDp = 360, heightDp = 640)
+@Composable
+private fun CalculatorScreenErrorPreview() {
+    PulseTheme {
+        CalculatorScreen(state = ErrorState, onAction = {}, onHistoryClick = {})
     }
 }
