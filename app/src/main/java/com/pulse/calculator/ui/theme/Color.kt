@@ -31,3 +31,6 @@ val ClearContent = Color(0xFF062A20)
 
 val FunctionContainer = Color(0xFF2D5BFF)
 val FunctionContent = Color(0xFFFFFFFF)
+
+val SheetContainer = Color(0xFF1A1442)
+val SheetDivider = Color(0x22FFFFFF)

@@ -1,5 +1,6 @@
 package com.pulse.calculator.state
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.pulse.calculator.engine.CalculatorEngine
 import com.pulse.calculator.engine.EvalResult
@@ -14,22 +15,25 @@ import kotlinx.coroutines.flow.asStateFlow
 /**
  * Holds the calculator state. Everything is synchronous: an action updates [state] before
  * [onAction] returns, so rapid input can never be reordered or dropped.
- * History lives here only (it survives rotation with the ViewModel and ends with the process).
+ * History is also kept in [savedState]: it survives rotation and the system recreating the
+ * process, but it is never written to disk and is dropped when the user closes the app.
  */
-class CalculatorViewModel : ViewModel() {
+class CalculatorViewModel(
+    private val savedState: SavedStateHandle = SavedStateHandle(),
+) : ViewModel() {
 
-    private val _state = MutableStateFlow(CalculatorState())
+    private val _state = MutableStateFlow(CalculatorState(history = restoreHistory()))
     val state: StateFlow<CalculatorState> = _state.asStateFlow()
 
     private val _events = MutableSharedFlow<UiEvent>(extraBufferCapacity = EventBuffer)
     val events: SharedFlow<UiEvent> = _events.asSharedFlow()
 
-    private var nextHistoryId = 0L
+    private var nextHistoryId = (_state.value.history.maxOfOrNull { it.id } ?: -1L) + 1
 
     fun onAction(action: CalculatorAction) {
         when (action) {
             CalculatorAction.Equals -> evaluate()
-            CalculatorAction.ClearHistory -> _state.value = _state.value.copy(history = emptyList())
+            CalculatorAction.ClearHistory -> setHistory(emptyList())
             else -> edit(action)
         }
     }
@@ -74,8 +78,8 @@ class CalculatorViewModel : ViewModel() {
                     isResult = true,
                     error = null,
                     preview = null,
-                    history = (listOf(entry) + current.history).take(MaxHistory),
                 )
+                setHistory((listOf(entry) + current.history).take(MaxHistory))
                 _events.tryEmit(UiEvent.ResultConfirmed)
             }
             EvalResult.Incomplete -> _events.tryEmit(UiEvent.Shake)
@@ -85,6 +89,27 @@ class CalculatorViewModel : ViewModel() {
             }
         }
     }
+
+    /** Updates the history in the state and in the saved state, in one place. */
+    private fun setHistory(history: List<HistoryEntry>) {
+        _state.value = _state.value.copy(history = history)
+        savedState[HistoryIdsKey] = LongArray(history.size) { history[it].id }
+        savedState[HistoryExpressionsKey] = Array(history.size) { history[it].expression }
+        savedState[HistoryResultsKey] = Array(history.size) { history[it].result }
+    }
+
+    /** Whatever is missing, mismatched or of the wrong type is ignored: restoring never crashes. */
+    private fun restoreHistory(): List<HistoryEntry> = runCatching {
+        val ids = savedState.get<LongArray>(HistoryIdsKey)
+        val expressions = savedState.get<Array<String>>(HistoryExpressionsKey)
+        val results = savedState.get<Array<String>>(HistoryResultsKey)
+        if (ids == null || expressions == null || results == null) {
+            emptyList()
+        } else {
+            val count = minOf(ids.size, expressions.size, results.size, MaxHistory)
+            List(count) { HistoryEntry(ids[it], expressions[it], results[it]) }
+        }
+    }.getOrDefault(emptyList())
 
     private companion object {
         const val MaxHistory = 50
@@ -101,3 +126,7 @@ class CalculatorViewModel : ViewModel() {
         }
     }
 }
+
+internal const val HistoryIdsKey = "history_ids"
+internal const val HistoryExpressionsKey = "history_expressions"
+internal const val HistoryResultsKey = "history_results"

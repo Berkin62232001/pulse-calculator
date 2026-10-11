@@ -4,6 +4,12 @@
     <string name="top_bar_title">PULSE</string>
     <string name="history_button">History</string>
 
+    <string name="history_title">History</string>
+    <string name="history_clear">Clear history</string>
+    <string name="history_empty_title">No calculations yet</string>
+    <string name="history_empty_hint">Results you confirm with = will show up here.</string>
+    <string name="history_row_description">%1$s equals %2$s</string>
+
     <string name="error_divide_by_zero">Can\'t divide by zero</string>
     <string name="error_overflow">Number too large</string>
     <string name="error_malformed">Invalid expression</string>

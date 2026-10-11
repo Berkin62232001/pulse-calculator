@@ -19,11 +19,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -45,6 +50,7 @@ import com.pulse.calculator.ui.effects.AnimatedBackground
 import com.pulse.calculator.ui.effects.DisplayEffects
 import com.pulse.calculator.ui.effects.ParticleBurst
 import com.pulse.calculator.ui.effects.displayEffects
+import com.pulse.calculator.ui.history.HistorySheet
 import com.pulse.calculator.ui.keypad.Keypad
 import com.pulse.calculator.ui.theme.DisplayExpression
 import com.pulse.calculator.ui.theme.LocalReducedMotion
@@ -63,12 +69,12 @@ fun CalculatorScreen(
     state: CalculatorState,
     events: Flow<UiEvent>,
     onAction: (CalculatorAction) -> Unit,
-    onHistoryClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
     val cappedDensity = Density(density.density, fontScale = density.fontScale.coerceAtMost(MaxFontScale))
     val effects = remember { DisplayEffects() }
+    var showHistory by rememberSaveable { mutableStateOf(false) }
     val reducedMotion = LocalReducedMotion.current
 
     // Events only start animations; nothing here can change the calculator state or block input.
@@ -98,7 +104,7 @@ fun CalculatorScreen(
                     .windowInsetsPadding(WindowInsets.safeDrawing)
                     .padding(horizontal = ScreenPadding),
             ) {
-                TopBar(onHistoryClick = onHistoryClick)
+                TopBar(onHistoryClick = { showHistory = true })
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -131,6 +137,14 @@ fun CalculatorScreen(
                 ParticleBurst(burstId = effects.burstId, origin = effects.equalsCenter)
             }
         }
+        if (showHistory) {
+            HistorySheet(
+                history = state.history,
+                onLoad = { onAction(CalculatorAction.LoadHistory(it.expression)) },
+                onClear = { onAction(CalculatorAction.ClearHistory) },
+                onDismiss = { showHistory = false },
+            )
+        }
     }
 }
 
@@ -147,6 +161,7 @@ private fun TopBar(onHistoryClick: () -> Unit) {
             color = DisplayExpression,
         )
         IconTouchTarget(
+            modifier = Modifier.testTag(TestTags.HistoryButton),
             iconRes = R.drawable.ic_history,
             contentDescription = stringResource(R.string.history_button),
             onClick = onHistoryClick,
@@ -182,9 +197,10 @@ private fun IconTouchTarget(
     contentDescription: String,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .size(IconTouchTarget)
             .clip(CircleShape)
             .combinedClickable(role = Role.Button, onClick = onClick, onLongClick = onLongClick),
@@ -206,7 +222,7 @@ private val ErrorState = CalculatorState(expression = "8/0", error = ErrorReason
 @Composable
 private fun CalculatorScreenSmallPreview() {
     PulseTheme {
-        CalculatorScreen(state = SampleState, events = emptyFlow(), onAction = {}, onHistoryClick = {})
+        CalculatorScreen(state = SampleState, events = emptyFlow(), onAction = {})
     }
 }
 
@@ -214,7 +230,7 @@ private fun CalculatorScreenSmallPreview() {
 @Composable
 private fun CalculatorScreenLargePreview() {
     PulseTheme {
-        CalculatorScreen(state = SampleState, events = emptyFlow(), onAction = {}, onHistoryClick = {})
+        CalculatorScreen(state = SampleState, events = emptyFlow(), onAction = {})
     }
 }
 
@@ -222,7 +238,7 @@ private fun CalculatorScreenLargePreview() {
 @Composable
 private fun CalculatorScreenLargeFontPreview() {
     PulseTheme {
-        CalculatorScreen(state = SampleState, events = emptyFlow(), onAction = {}, onHistoryClick = {})
+        CalculatorScreen(state = SampleState, events = emptyFlow(), onAction = {})
     }
 }
 
@@ -230,6 +246,6 @@ private fun CalculatorScreenLargeFontPreview() {
 @Composable
 private fun CalculatorScreenErrorPreview() {
     PulseTheme {
-        CalculatorScreen(state = ErrorState, events = emptyFlow(), onAction = {}, onHistoryClick = {})
+        CalculatorScreen(state = ErrorState, events = emptyFlow(), onAction = {})
     }
 }

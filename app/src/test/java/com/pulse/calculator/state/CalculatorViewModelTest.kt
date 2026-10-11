@@ -1,6 +1,7 @@
 package com.pulse.calculator.state
 
 import com.pulse.calculator.engine.ErrorReason
+import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
@@ -400,5 +401,90 @@ class CalculatorViewModelTest {
 
         viewModel.onAction(CalculatorAction.LoadHistory("(2)-3"))
         assertEquals("-1", viewModel.state.value.preview)
+    }
+
+    // M7: history is mirrored in the SavedStateHandle so it survives rotation (never written to disk).
+
+    private fun viewModelWith(handle: SavedStateHandle) = CalculatorViewModel(handle)
+
+    @Test
+    fun historySurvivesAViewModelRebuiltFromTheSameSavedState() {
+        val handle = SavedStateHandle()
+        val first = viewModelWith(handle)
+        first.press("1+1=C2+2=C3+3=")
+
+        val restored = viewModelWith(handle)
+
+        assertEquals(first.state.value.history, restored.state.value.history)
+        assertEquals(listOf("3+3", "2+2", "1+1"), restored.state.value.history.map { it.expression })
+        assertEquals(listOf("6", "4", "2"), restored.state.value.history.map { it.result })
+    }
+
+    @Test
+    fun restoredViewModelKeepsNumberingNewestFirst() {
+        val handle = SavedStateHandle()
+        viewModelWith(handle).press("1+1=C2+2=")
+
+        val restored = viewModelWith(handle)
+        restored.press("C3+3=")
+
+        assertEquals(listOf(2L, 1L, 0L), restored.state.value.history.map { it.id })
+        assertEquals("3+3", restored.state.value.history.first().expression)
+    }
+
+    @Test
+    fun onlyTheHistoryIsRestoredNotTheExpression() {
+        val handle = SavedStateHandle()
+        viewModelWith(handle).press("1+1=C5+")
+
+        val restored = viewModelWith(handle)
+
+        assertEquals(1, restored.state.value.history.size)
+        assertEquals("", restored.state.value.expression)
+    }
+
+    @Test
+    fun clearingHistoryAlsoClearsTheSavedState() {
+        val handle = SavedStateHandle()
+        val first = viewModelWith(handle)
+        first.press("1+1=")
+
+        first.onAction(CalculatorAction.ClearHistory)
+
+        assertTrue(viewModelWith(handle).state.value.history.isEmpty())
+    }
+
+    @Test
+    fun restoringNeverExceedsTheCapAndKeepsTheNewest() {
+        val handle = SavedStateHandle()
+        handle[HistoryIdsKey] = LongArray(60) { (59 - it).toLong() }
+        handle[HistoryExpressionsKey] = Array(60) { "e${59 - it}" }
+        handle[HistoryResultsKey] = Array(60) { "r${59 - it}" }
+
+        val history = viewModelWith(handle).state.value.history
+
+        assertEquals(50, history.size)
+        assertEquals(59L, history.first().id)
+        assertEquals(10L, history.last().id)
+    }
+
+    @Test
+    fun mismatchedSavedArraysAreTrimmedNotCrashed() {
+        val handle = SavedStateHandle()
+        handle[HistoryIdsKey] = longArrayOf(2, 1, 0)
+        handle[HistoryExpressionsKey] = arrayOf("a", "b")
+        handle[HistoryResultsKey] = arrayOf("x", "y", "z")
+
+        val history = viewModelWith(handle).state.value.history
+
+        assertEquals(listOf(HistoryEntry(2, "a", "x"), HistoryEntry(1, "b", "y")), history)
+    }
+
+    @Test
+    fun savedStateOfTheWrongTypeIsIgnored() {
+        val handle = SavedStateHandle()
+        handle[HistoryIdsKey] = "not an array"
+
+        assertTrue(viewModelWith(handle).state.value.history.isEmpty())
     }
 }

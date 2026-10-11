@@ -31,3 +31,27 @@ val ButtonLabelStyle = TextStyle(
     fontFamily = FontFamily.SansSerif,
     fontWeight = FontWeight.Bold,
 )
+
+val HistoryTitleStyle = TextStyle(
+    fontFamily = FontFamily.SansSerif,
+    fontWeight = FontWeight.ExtraBold,
+    fontSize = 20.sp,
+)
+
+val HistoryExpressionStyle = TextStyle(
+    fontFamily = FontFamily.SansSerif,
+    fontWeight = FontWeight.Medium,
+    fontSize = 16.sp,
+)
+
+val HistoryResultStyle = TextStyle(
+    fontFamily = FontFamily.SansSerif,
+    fontWeight = FontWeight.Bold,
+    fontSize = 28.sp,
+)
+
+val HistoryActionStyle = TextStyle(
+    fontFamily = FontFamily.SansSerif,
+    fontWeight = FontWeight.Bold,
+    fontSize = 14.sp,
+)

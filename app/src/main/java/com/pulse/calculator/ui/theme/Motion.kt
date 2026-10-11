@@ -71,6 +71,12 @@ val ParticleGravity = 360.dp
 val ParticleMinRadius = 3.dp
 val ParticleMaxRadius = 6.dp
 
+// History sheet rows stagger in: only the first few rows, so a long list never delays anything.
+const val HistoryRowEnterMillis = 220
+const val HistoryRowStaggerMillis = 40
+const val HistoryStaggerMaxRows = 8
+val HistoryRowRiseDistance = 16.dp
+
 // Background glow drift: one full back-and-forth cycle.
 const val BackgroundDriftMillis = 18_000
 val BackgroundDriftEasing = LinearEasing
