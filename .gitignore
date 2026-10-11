@@ -13,3 +13,8 @@
 /app/build/
 /app/release/
 .kotlin/
+
+# Release signing: never commit keys or the file that points to them.
+keystore.properties
+*.jks
+*.keystore
