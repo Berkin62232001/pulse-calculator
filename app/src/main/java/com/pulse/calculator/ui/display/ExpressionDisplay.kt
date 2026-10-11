@@ -23,7 +23,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.text
@@ -87,6 +89,8 @@ fun ExpressionDisplay(
                 .semantics {
                     this.testTag = TestTags.Expression
                     this.text = AnnotatedString(text.ifEmpty { EmptyPlaceholder })
+                    // Only a confirmed result is announced; typing must stay silent.
+                    if (isResult) liveRegion = LiveRegionMode.Polite
                 },
             horizontalArrangement = Arrangement.End,
         ) {

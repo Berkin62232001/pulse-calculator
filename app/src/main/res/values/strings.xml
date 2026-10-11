@@ -35,4 +35,5 @@
     <string name="key_equals">equals</string>
     <string name="key_clear">all clear</string>
     <string name="key_backspace">backspace</string>
+    <string name="action_clear_all">Clear all</string>
 </resources>

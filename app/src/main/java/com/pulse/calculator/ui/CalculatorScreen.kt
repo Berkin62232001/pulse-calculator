@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,13 +26,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -52,12 +52,12 @@ import com.pulse.calculator.ui.effects.ParticleBurst
 import com.pulse.calculator.ui.effects.displayEffects
 import com.pulse.calculator.ui.history.HistorySheet
 import com.pulse.calculator.ui.keypad.Keypad
+import com.pulse.calculator.ui.theme.CappedFontScale
 import com.pulse.calculator.ui.theme.DisplayExpression
 import com.pulse.calculator.ui.theme.LocalReducedMotion
 import com.pulse.calculator.ui.theme.PulseTheme
 import com.pulse.calculator.ui.theme.TopBarTitleStyle
 
-private const val MaxFontScale = 1.3f
 private const val DisplayWeight = 0.4f
 private const val KeypadWeight = 0.6f
 
@@ -71,8 +71,6 @@ fun CalculatorScreen(
     onAction: (CalculatorAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val density = LocalDensity.current
-    val cappedDensity = Density(density.density, fontScale = density.fontScale.coerceAtMost(MaxFontScale))
     val effects = remember { DisplayEffects() }
     var showHistory by rememberSaveable { mutableStateOf(false) }
     val reducedMotion = LocalReducedMotion.current
@@ -95,7 +93,7 @@ fun CalculatorScreen(
         }
     }
 
-    CompositionLocalProvider(LocalDensity provides cappedDensity) {
+    CappedFontScale {
         Box(modifier = modifier.fillMaxSize()) {
             AnimatedBackground(Modifier.matchParentSize())
             Column(
@@ -112,7 +110,7 @@ fun CalculatorScreen(
                     verticalArrangement = Arrangement.Bottom,
                 ) {
                     ExpressionDisplay(
-                        text = ExpressionFormat.toDisplay(state.expression),
+                        text = ExpressionFormat.toDisplay(state.expression, state.isResult),
                         isResult = state.isResult,
                         modifier = Modifier.displayEffects(effects),
                     )
@@ -186,6 +184,7 @@ private fun BackspaceRow(onClick: () -> Unit, onLongClick: () -> Unit) {
             contentDescription = stringResource(R.string.key_backspace),
             onClick = onClick,
             onLongClick = onLongClick,
+            longClickLabel = stringResource(R.string.action_clear_all),
         )
     }
 }
@@ -197,13 +196,25 @@ private fun IconTouchTarget(
     contentDescription: String,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
+    longClickLabel: String? = null,
     modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier
             .size(IconTouchTarget)
             .clip(CircleShape)
-            .combinedClickable(role = Role.Button, onClick = onClick, onLongClick = onLongClick),
+            .combinedClickable(
+                role = Role.Button,
+                onClick = onClick,
+                onLongClickLabel = longClickLabel,
+                onLongClick = onLongClick,
+            )
+            .semantics {
+                // Screen readers cannot press and hold, so the long press is also a listed action.
+                if (onLongClick != null && longClickLabel != null) {
+                    customActions = listOf(CustomAccessibilityAction(longClickLabel) { onLongClick(); true })
+                }
+            },
         contentAlignment = Alignment.Center,
     ) {
         Icon(

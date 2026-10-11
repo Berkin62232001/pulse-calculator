@@ -12,7 +12,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.pulse.calculator.ui.theme.DisplayError
@@ -53,6 +56,7 @@ fun PreviewDisplay(
     Box(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
         PreviewText(
             content = current,
+            announce = current.isError,
             modifier = Modifier.graphicsLayer {
                 alpha = progress.value
                 translationY = PreviewSlideDistance.toPx() * (1f - progress.value)
@@ -73,7 +77,11 @@ fun PreviewDisplay(
 }
 
 @Composable
-private fun PreviewText(content: PreviewContent, modifier: Modifier = Modifier) {
+private fun PreviewText(
+    content: PreviewContent,
+    modifier: Modifier = Modifier,
+    announce: Boolean = false,
+) {
     Text(
         text = content.text,
         style = PreviewStyle,
@@ -81,7 +89,10 @@ private fun PreviewText(content: PreviewContent, modifier: Modifier = Modifier) 
         textAlign = TextAlign.End,
         maxLines = 1,
         minLines = 1,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            // A math error is announced right away; the live preview itself never is.
+            .semantics { if (announce) liveRegion = LiveRegionMode.Assertive },
     )
 }
 

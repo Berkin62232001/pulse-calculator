@@ -38,6 +38,7 @@ import com.pulse.calculator.R
 import com.pulse.calculator.state.HistoryEntry
 import com.pulse.calculator.ui.TestTags
 import com.pulse.calculator.ui.display.ExpressionFormat
+import com.pulse.calculator.ui.theme.CappedFontScale
 import com.pulse.calculator.ui.theme.ClearContainer
 import com.pulse.calculator.ui.theme.DisplayExpression
 import com.pulse.calculator.ui.theme.DisplayPreview
@@ -80,23 +81,26 @@ fun HistorySheet(
         containerColor = SheetContainer,
         contentColor = DisplayExpression,
     ) {
-        Column(modifier = Modifier.testTag(TestTags.HistorySheet)) {
-            Header(canClear = history.isNotEmpty(), onClear = onClear)
-            HorizontalDivider(color = SheetDivider)
-            if (history.isEmpty()) {
-                EmptyState()
-            } else {
-                LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                    itemsIndexed(history, key = { _, entry -> entry.id }) { index, entry ->
-                        HistoryRow(
-                            entry = entry,
-                            index = index,
-                            onClick = {
-                                onLoad(entry)
-                                scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
-                            },
-                        )
-                        HorizontalDivider(color = SheetDivider)
+        // The sheet is a window of its own, so the font scale cap has to be applied again here.
+        CappedFontScale {
+            Column(modifier = Modifier.testTag(TestTags.HistorySheet)) {
+                Header(canClear = history.isNotEmpty(), onClear = onClear)
+                HorizontalDivider(color = SheetDivider)
+                if (history.isEmpty()) {
+                    EmptyState()
+                } else {
+                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                        itemsIndexed(history, key = { _, entry -> entry.id }) { index, entry ->
+                            HistoryRow(
+                                entry = entry,
+                                index = index,
+                                onClick = {
+                                    onLoad(entry)
+                                    scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
+                                },
+                            )
+                            HorizontalDivider(color = SheetDivider)
+                        }
                     }
                 }
             }

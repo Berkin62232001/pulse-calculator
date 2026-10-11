@@ -1,10 +1,24 @@
 package com.pulse.calculator.ui.display
 
+import com.pulse.calculator.engine.NumberFormatter
+
 /**
  * Internal expression -> display text: `× ÷ −`, spaces around binary operators, thousands
  * grouping in numbers. Pure Kotlin so it can be unit-tested on the JVM.
  */
 object ExpressionFormat {
+
+    /**
+     * What the display shows. A confirmed result uses the notation of PRODUCT_SPEC section 6
+     * (12 significant digits, scientific for >= 1e12 and < 1e-9); the plain decimal it is kept as
+     * internally only shows once the user edits it. Anything else is shown as typed.
+     */
+    fun toDisplay(expression: String, isResult: Boolean): String {
+        if (!isResult) return toDisplay(expression)
+        val value = expression.toBigDecimalOrNull() ?: return toDisplay(expression)
+        val text = NumberFormatter.format(value)
+        return if (text.startsWith("-")) "−" + text.drop(1) else text
+    }
 
     fun toDisplay(expression: String): String {
         val out = StringBuilder()
