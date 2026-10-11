@@ -13,6 +13,15 @@ history.
 - **Accessible.** Every button has a description, results and errors are announced, text follows
   the system font size up to a cap.
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/images/preview.png" width="200" alt="Live preview: the result 37 shows while the expression is still being typed">
+  <img src="docs/images/result.png" width="200" alt="A confirmed result with its glow and particle burst">
+  <img src="docs/images/error.png" width="200" alt="Division by zero shown as an error with a message">
+  <img src="docs/images/history.png" width="200" alt="The session history sheet">
+</p>
+
 The product, design and test decisions live in [`docs/`](docs):
 [`PRODUCT_SPEC.md`](docs/PRODUCT_SPEC.md), [`TECHNICAL_DESIGN.md`](docs/TECHNICAL_DESIGN.md),
 [`TEST_PLAN.md`](docs/TEST_PLAN.md). [`CLAUDE.md`](CLAUDE.md) holds the working rules for the
@@ -115,3 +124,7 @@ Version is set in `app/build.gradle.kts` (`versionCode` must go up with every re
 
 Portrait only, dark theme only, no scientific functions, no persistent history, no copy and paste,
 no repeat-equals, no haptics. See section 11 of the product spec.
+
+## License
+
+[MIT](LICENSE) © 2026 Berkin Yilmaz
