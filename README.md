@@ -22,11 +22,6 @@ history.
   <img src="docs/images/history.png" width="200" alt="The session history sheet">
 </p>
 
-The product, design and test decisions live in [`docs/`](docs):
-[`PRODUCT_SPEC.md`](docs/PRODUCT_SPEC.md), [`TECHNICAL_DESIGN.md`](docs/TECHNICAL_DESIGN.md),
-[`TEST_PLAN.md`](docs/TEST_PLAN.md). [`CLAUDE.md`](CLAUDE.md) holds the working rules for the
-AI-assisted development of this project.
-
 ## Requirements
 
 | What | Version |
@@ -60,9 +55,13 @@ Or open the folder in Android Studio and press Run.
 ./gradlew connectedDebugAndroidTest  # Compose UI tests; needs a running emulator or device
 ```
 
-The unit tests cover every case in `docs/TEST_PLAN.md` sections 1 to 5. The UI tests cover section 6
-plus accessibility, font scale, rotation and the history sheet. Section 7 of the test plan is a manual
-checklist for each release candidate.
+The unit tests cover the engine (evaluation, incomplete versus error input, number formatting), every
+input rule, the ViewModel (equals, errors, preview, history) and the display mapping. The UI tests cover
+typing, the live preview, content descriptions, live regions, the font scale cap, rotation, the portrait
+lock and the history sheet.
+
+Before a release it is still worth checking a real device by hand: smoothness, system animations off,
+the largest font size, TalkBack, a small and a large phone, and that closing the app clears the history.
 
 ## Architecture
 
@@ -123,7 +122,7 @@ Version is set in `app/build.gradle.kts` (`versionCode` must go up with every re
 ## Known limitations (v1)
 
 Portrait only, dark theme only, no scientific functions, no persistent history, no copy and paste,
-no repeat-equals, no haptics. See section 11 of the product spec.
+no repeat-equals, no haptics.
 
 ## License
 
