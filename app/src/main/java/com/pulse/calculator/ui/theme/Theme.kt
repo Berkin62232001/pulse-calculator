@@ -14,5 +14,9 @@ private val PulseColorScheme = darkColorScheme(
 
 @Composable
 fun PulseTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = PulseColorScheme, content = content)
+    MaterialTheme(
+        colorScheme = PulseColorScheme,
+        typography = PulseTypography,
+        content = content,
+    )
 }

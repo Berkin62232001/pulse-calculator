@@ -1,51 +1,34 @@
 package com.pulse.calculator
 
+import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import com.pulse.calculator.ui.CalculatorScreen
 import com.pulse.calculator.ui.theme.PulseTheme
+
+private const val LogTag = "Pulse"
+private const val SampleExpression = "12 + 5 × (3 + 2)"
+private const val SamplePreview = "37"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+        )
         setContent {
             PulseTheme {
-                PulseHome()
+                CalculatorScreen(
+                    expression = SampleExpression,
+                    preview = SamplePreview,
+                    onKey = { label -> Log.d(LogTag, "key: $label") },
+                )
             }
         }
     }
-}
-
-@Composable
-private fun PulseHome() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = stringResource(R.string.app_name),
-            style = MaterialTheme.typography.displayMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun PulseHomePreview() {
-    PulseTheme { PulseHome() }
 }

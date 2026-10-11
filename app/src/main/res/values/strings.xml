@@ -1,4 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Pulse</string>
+    <string name="top_bar_title">PULSE</string>
+    <string name="history_button">History</string>
+
+    <string name="key_0">zero</string>
+    <string name="key_1">one</string>
+    <string name="key_2">two</string>
+    <string name="key_3">three</string>
+    <string name="key_4">four</string>
+    <string name="key_5">five</string>
+    <string name="key_6">six</string>
+    <string name="key_7">seven</string>
+    <string name="key_8">eight</string>
+    <string name="key_9">nine</string>
+    <string name="key_dot">decimal point</string>
+    <string name="key_plus">plus</string>
+    <string name="key_minus">minus</string>
+    <string name="key_multiply">multiply</string>
+    <string name="key_divide">divide</string>
+    <string name="key_percent">percent</string>
+    <string name="key_open_paren">open parenthesis</string>
+    <string name="key_close_paren">close parenthesis</string>
+    <string name="key_equals">equals</string>
+    <string name="key_clear">all clear</string>
+    <string name="key_backspace">backspace</string>
 </resources>
